@@ -1,12 +1,11 @@
 import sys
 from utils import *
 from mapSolver import MapSolver
+from map import *
 
 def main():
     filename = sys.argv[1]
     start, goals, map = parse_grid(filename=filename)
-
-    # Create a map solver instance
     solver = MapSolver(map)
 
     if (len(sys.argv) == 3):
@@ -31,8 +30,10 @@ def main():
         else:
             print(f"{filename} {sys.argv[2]}")
             print(f"No goal is reachable; {nodes}")
+            
     elif(len(sys.argv) == 2):
-        print("hehe")
+        app = App()
+        app.mainloop()
 
 if __name__ == "__main__":
     main()
