@@ -1,16 +1,16 @@
-from collections import OrderedDict, deque
+from collections import deque
 
 class MapSolver:
-    def __init__(self, map: dict):
+    def __init__(self, map: list):
         """
         Initializes the MapSolver with a given map.
 
         Args:
-            map: A dictionary representing the map.
+            map: A 2D array representing the map.
         """
         self.map = map
     
-    def depth_first_search(self, start: tuple, goals: set):
+    def depth_first_search(self, start: tuple, goals: set) -> tuple[int, list]:
         """
         Function that solves the map with Depth First Search(DFS)
 
@@ -21,23 +21,23 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        visited = set()  # A set to store visited cells
-        frontier = [start]  # A list as frontier
-        parent = {}  # A dictionary to store checked movements
+        visited = set()
+        frontier = [start]
+        parent = {}
 
-        parent[start] = (None, 0)
+        parent[start] = (None, None)
 
-        while frontier:  # While there are nodes to explore
-            cell = frontier.pop()  # Pop the last node from the frontier
-            visited.add(cell)  # Mark the cell as visited
+        while frontier:
+            cell = frontier.pop()
+            visited.add(cell)
 
             if self.goal_meet(cell, goals):
                 path = self.parse_path(start, cell, parent)
                 return len(parent), path
             
-            for i in range(len(self.map[cell])):
-                index = len(self.map[cell]) - 1 - i
-                neighbor = self.map[cell][index]
+            neighbors = self.get_neighbors(cell)
+            # Reverse the order of neighbors to ensure the order of execution is up, left, down, right
+            for neighbor in reversed(neighbors):
             
                 if neighbor[0] not in visited and neighbor[0] not in frontier:
                     frontier.append(neighbor[0])
@@ -53,32 +53,33 @@ class MapSolver:
             start: Coordinate of a point
             goals: A set of all possible goals
         Return:
-                nodes: Number of nodes traversed
+            nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        visited = set()             # A set to store visited cell
-        frontier = deque([start])   # A queue as frontier 
-        parent = {}                 # A dictionary to store checked movement
+        visited = set()             
+        frontier = deque([start]) 
+        parent = {}
 
-        parent[start] = (None, 0)
+        parent[start] = (None, None)
 
         while frontier:
-            node = frontier.popleft()
-            visited.add(node)
+            cell = frontier.popleft()
+            if cell not in visited: 
+                visited.add(cell)
 
-            if self.goal_meet(node, goals):
-                path = self.parse_path(start, node, parent)
-                return len(parent), path
-
-            for neighbor in self.map[node]:
-                if neighbor[0] not in visited and neighbor[0] not in frontier:
-                    parent[neighbor[0]] = (node, neighbor[1])
-
-                    frontier.append(neighbor[0])
+                if self.goal_meet(cell, goals):
+                    path = self.parse_path(start, cell, parent)
+                    return len(parent), path
+                
+                neighbors = self.get_neighbors(cell)
+                for neighbor in neighbors:
+                    if neighbor[0] not in visited and neighbor[0] not in frontier:
+                        parent[neighbor[0]] = (cell, neighbor[1])
+                        frontier.append(neighbor[0])
 
         return len(parent), None
     
-    def greedy_best_first_search(self, start: tuple, goals: set, cost_type: str = "manhattan"):
+    def greedy_best_first_search(self, start: tuple, goals: set, cost_type: str = "manhattan") -> tuple[int, list]:
         """
         Function that solves the map with Greedy Best First Search(GBFS)
 
@@ -89,33 +90,33 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        visited = set()             # A set to store visited cell
-        frontier = {}               # A frontier to store 
-        parent = {}                 # A dictionary to store final path
+        visited = set()
+        frontier = {}
+        parent = {}
 
         frontier[start] = self.heuristic_cost(start, goals, cost_type)
-        parent[start] = (None, 0)
+        parent[start] = (None, None)
 
         while frontier:
             # Get the key with the lowest cost
-            v = min(frontier, key=frontier.get)
-            del frontier[v]
+            cell = min(frontier, key=frontier.get)
+            del frontier[cell]
+            visited.add(cell)
 
-            if self.goal_meet(v, goals):
-                path = self.parse_path(start, v, parent)
+            if self.goal_meet(cell, goals):
+                path = self.parse_path(start, cell, parent)
                 return len(parent), path
-            
-            visited.add(v)
-            
-            for neighbor in self.map[v]:
+
+            neighbors = self.get_neighbors(cell)
+            for neighbor in neighbors:
                 if neighbor[0] not in visited and neighbor[0] not in frontier:
                     cost = self.heuristic_cost(neighbor[0], goals, cost_type)
                     frontier[neighbor[0]] = cost
-                    parent[neighbor[0]] = (v, neighbor[1])
+                    parent[neighbor[0]] = (cell, neighbor[1])
 
         return len(parent), None
     
-    def a_star(self, start: tuple, goals: set, cost_type: str = "manhattan"):
+    def astar(self, start, goals, cost_type: str ="manhattan") -> tuple[int, list]:
         """
         Function that solves the map with A* Search
 
@@ -127,42 +128,47 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        visited = set()             # A set to store visited cell
-        frontier = {}               # A frontier to store 
-        parent = {}                 # A dictionary to store final path
-        g_costs = {start : 0}
+        frontier = {}               
+        visited = {}              
+        parent = {}                 
 
-        frontier[start] = self.heuristic_cost(start, goals, cost_type)
+        frontier[start] = 0
         parent[start] = (None, None, 0)
 
         while frontier:
-            # Get the key with the lowest cost
-            v = min(frontier, key=frontier.get)
-            del frontier[v]
+            costs = {key: value + self.heuristic_cost(key, goals, cost_type) for key, value in frontier.items()}
+            cell = min(costs, key=costs.get)
 
-            if self.goal_meet(v, goals):
-                path = self.parse_path(start, v, parent)
+            current_cell_cost = frontier[cell]
+            del frontier[cell]
+            visited[cell] = current_cell_cost
+
+            if self.goal_meet(cell, goals):
+                path = self.parse_path(start, cell, parent)
                 return len(parent), path
             
-            visited.add(v)
-            
-            for neighbor in self.map[v]:
-                if neighbor[0] not in visited:
-                    f_cost = self.heuristic_cost(v, [neighbor[0]], cost_type) + g_costs[v]
-                    h_cost = self.heuristic_cost(neighbor[0], goals, cost_type)
-                    total_cost = f_cost + h_cost
-    
-                    if neighbor[0] not in frontier:
-                        frontier[neighbor[0]] = total_cost
-                        parent[neighbor[0]] = (v, neighbor[1], total_cost)
-                        g_costs[neighbor[0]] = f_cost
-                    else:
-                        frontier[neighbor[0]] = min(frontier[neighbor[0]], total_cost)
-                        g_costs[neighbor[0]] = min(g_costs[neighbor[0]], f_cost)
+            neighbors = self.get_neighbors(cell)
+            for neighbor in neighbors:
+                g_cost = self.heuristic_cost(neighbor[0], [cell], cost_type) + current_cell_cost
+                h_cost = self.heuristic_cost(neighbor[0], goals, cost_type)
+                f_cost = g_cost + h_cost
+
+                if neighbor[0] in frontier:
+                    if f_cost < frontier[neighbor[0]]:
+                        frontier[neighbor[0]] = f_cost
+                        parent[neighbor[0]] = (cell, neighbor[1])
+                elif neighbor[0] in visited:
+                    if f_cost < visited[neighbor[0]]:
+                        del visited[neighbor[0]]
+                        frontier[neighbor[0]] = f_cost
+                        parent[neighbor[0]] = (cell, neighbor[1]) 
+                else:
+                    frontier[neighbor[0]] = f_cost
+                    parent[neighbor[0]] = (cell, neighbor[1])
 
         return len(parent), None
-    
-    def iterative_deepening(self, start: tuple, goals: set):
+
+    def iterative_deepening(self, start: tuple, goals: set) -> tuple[int, list]:
         """
         Function that solves the map with Iterative Deepening
 
@@ -173,118 +179,147 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-
-        limit = 0
+        limit = 1
 
         while True:
-            current_layer = 0
+            current_layer = 1
+            current_layer_node = 1
+            visited = set()
+            frontier = [start]
+            parent = {start: (None, None)}
+
+            while frontier: 
+                cell = frontier.pop()
+                current_layer_node-=1
+                visited.add(cell)
+
+                if self.goal_meet(cell, goals):
+                    path = self.parse_path(start, cell, parent)
+                    return len(parent), path
+                
+                neighbors = self.get_neighbors(cell)
+                for i in range(len(neighbors)):
+                    index = len(neighbors) - 1 - i
+                    neighbor = neighbors[index]
+                
+                    if neighbor[0] not in visited and neighbor[0] not in frontier:
+                        frontier.append(neighbor[0])
+                        parent[neighbor[0]] = (cell, neighbor[1])
+
+                if current_layer_node == 0:
+                    current_layer+=1
+                    current_layer_node = len(frontier)
+
+                if current_layer > limit:
+                    break
             
-            while current_layer <= limit:
-                visited = set()  # A set to store visited cells
-                frontier = [start]  # A list as frontier
-                parent = {}  # A dictionary to store checked movements
+            if current_layer > limit:
+                limit += 1
+            else:
+                return len(parent), None
 
-                parent[start] = (None, 0)
-                temp_frontier = []
-                while frontier:  # While there are nodes to explore
-                    cell = frontier.pop()  # Pop the last node from the frontier
-                    visited.add(cell)  # Mark the cell as visited
-
-                    if self.goal_meet(cell, goals):
-                        path = self.parse_path(start, cell, parent)
-                        return len(parent), path
-                    
-                    for i in range(len(self.map[cell])):
-                        index = len(self.map[cell]) - 1 - i
-                        neighbor = self.map[cell][index]
-                    
-                        if neighbor[0] not in visited:
-                            temp_frontier.append(neighbor[0])
-                            parent[neighbor[0]] = (cell, neighbor[1])
-
-                if (len(temp_frontier) == 0):
-                    break
-                else:
-                    frontier = temp_frontier
-
-                if current_layer == limit:
-                    break
-
-            current_layer+=1
-
-        return len(parent), None
-    
-    def ida_star(self, start: tuple, goals: set, cost_type: str = "manhattan"):
+    def ida_star(self, start, goals, cost_type: str ="manhattan") -> tuple[int, list]:
         """
-        Function that solves the map with IDA* Search
+        Function that solves the map with Iterative Deepening A*
 
         Args:
             start: Coordinate of a point
             goals: A set of all possible goals
-            cost_type: The type of heuristic cost function to use
         Return:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        def dfs(current, g_cost, threshold, parent, visited):
-            """
-            Recursive depth-first search for IDA* with cost threshold.
-            """
-            h_cost = self.heuristic_cost(current, goals, cost_type)
-            f_cost = g_cost + h_cost
-
-            # If the total cost exceeds the threshold, return f_cost as the minimum exceeded cost
-            if f_cost > threshold:
-                return f_cost, None
-
-            # If goal is reached, return the path
-            if self.goal_meet(current, goals):
-                return f_cost, self.parse_path(start, current, parent)
-
-            visited.add(current)
-
-            # Set minimum cost that exceeds threshold to infinity
-            min_exceeded_cost = float('inf')
-            path = None
-
-            for neighbor in self.map[current]:
-                if neighbor[0] not in visited:
-                    parent[neighbor[0]] = (current, neighbor[1], g_cost + 1)  # Track parent node and move
-                    # Recursively search for the neighbor
-                    new_cost, new_path = dfs(neighbor[0], g_cost + 1, threshold, parent, visited)
-
-                    # If we find a valid path, return it immediately
-                    if new_path is not None:
-                        return new_cost, new_path
-
-                    # Update the minimum exceeded cost
-                    if new_cost < min_exceeded_cost:
-                        min_exceeded_cost = new_cost
-
-            visited.remove(current)
-            return min_exceeded_cost, None
-
-        # Initialize threshold with heuristic cost of the start node
         threshold = self.heuristic_cost(start, goals, cost_type)
-        parent = {start: (None, None, 0)}  # Track parent and movement path for each node
-        total_nodes_traversed = 0  # Count the total number of nodes traversed
 
         while True:
+            frontier = [(start, 0)]
+            parent = {start: (None, None)}
             visited = set()
-            cost, path = dfs(start, 0, threshold, parent, visited)
+            next_threshold = float("inf")
 
-            total_nodes_traversed += len(visited)
+            while frontier:
+                cell, g_cost = frontier.pop()
+                visited.add(cell)
 
-            if path is not None:  # If a valid path is found, return the result
-                return total_nodes_traversed, path
+                h_cost = self.heuristic_cost(cell, goals, cost_type)
+                f_cost = g_cost + h_cost
 
-            # If no path found and the minimum exceeded cost is infinity, return failure
-            if cost == float('inf'):
-                return total_nodes_traversed, None
+                if f_cost > threshold:
+                    next_threshold = min(next_threshold, f_cost)
+                    continue
 
-            # Update threshold to the minimum exceeded cost
-            threshold = cost
-    
+                if self.goal_meet(cell, goals):
+                    path = self.parse_path(start, cell, parent)
+                    return len(parent), path
+                
+                neighbors = self.get_neighbors(cell)
+                for i in range(len(neighbors)):
+                    index = len(neighbors) - 1 - i
+                    neighbor = neighbors[index]
+                
+                    if neighbor[0] not in visited and not any(t[0] == neighbor[0] for t in frontier):
+                        frontier.append((neighbor[0], g_cost + self.heuristic_cost(cell, [neighbor[0]], cost_type)))
+                        parent[neighbor[0]] = (cell, neighbor[1])
+
+            if next_threshold == float("inf"):
+                return len(visited), None
+
+            threshold = next_threshold
+
+    def cell_in_map(self, cell: tuple) -> bool:
+        """
+        Function that checks if a cell is within the map boundaries
+
+        Args:
+            cell: Coordinate of a cell
+        Return:
+            true: If the cell is within the map boundaries
+            false: If the cell is outside the map boundaries
+        """
+        return cell[0] >= 0 and cell[0] < len(self.map) and cell[1] >= 0 and cell[1] < len(self.map[0])
+
+    def cell_is_wall(self, cell: tuple) -> bool:
+        """
+        Function that checks if a cell is a wall
+
+        Args:
+            cell: Coordinate of a cell
+        Return:
+            true: If the cell is a wall
+            false: If the cell is not a wall
+        """
+        return self.map[cell[0]][cell[1]] == 1
+
+    def get_neighbors(self, cell: tuple) -> list:
+        """
+        Function that retrieves the neighbors of a cell
+        Neighbors list will follow order "up", "left", "down", "right"
+
+        Args:
+            cell: Coordinate of a cell
+        Return:
+            neighbors: A list of all valid neighbors of the cell
+        """
+        neighbors = []
+        # Need to reverse coordinates to access element accurately
+        cell_x = cell[1]
+        cell_y = cell[0]
+
+        directions = {(-1, 0) : "up", 
+                      (0, -1) : "left", 
+                      (1, 0) : "down", 
+                      (0, 1) : "right"}
+
+        for coor, direction in directions.items():
+            neighbor_x = cell_x + coor[0]
+            neighbor_y = cell_y + coor[1]
+            neighbor = (neighbor_x, neighbor_y)
+
+            if self.cell_in_map(neighbor) and not self.cell_is_wall(neighbor):
+                neighbors.append(((neighbor_y, neighbor_x), direction))
+
+        return neighbors
+
     def goal_meet(self, point: tuple, goals: set) -> bool:
         """
         Function that checks if the goal is met or not
@@ -298,7 +333,7 @@ class MapSolver:
         """
         return point in goals
     
-    def manhattan_distance(self, point, goals):
+    def manhattan_distance(self, point: tuple, goals: set) -> float:
         """
         Function that calculates the Manhattan distance from a point to a set of goals
 
@@ -311,7 +346,7 @@ class MapSolver:
         distances = [abs(point[0] - goal[0]) + abs(point[1] - goal[1]) for goal in goals]
         return min(distances)
     
-    def euclidean_distance(self, point, goals):
+    def euclidean_distance(self, point: tuple, goals: set) -> float:
         """
         Function that calculates the Euclidean distance from a point to a set of goals
 
@@ -324,7 +359,7 @@ class MapSolver:
         distances = [((point[0] - goal[0])**2 + (point[1] - goal[1])**2)**0.5 for goal in goals]
         return min(distances)
     
-    def chebyshev_distance(self, point, goals):
+    def chebyshev_distance(self, point: tuple, goals: set) -> int:
         """
         Function that calculates the Chebyshev distance from a point to a set of goals
 
@@ -337,7 +372,7 @@ class MapSolver:
         distances = [max(abs(point[0] - goal[0]), abs(point[1] - goal[1])) for goal in goals]
         return min(distances)
     
-    def heuristic_cost(self, point, goals, type) -> int:
+    def heuristic_cost(self, point: tuple, goals: set, type: str) -> int:
         """
         Function that calculates the heuristic cost from a point to a set of goals
 
