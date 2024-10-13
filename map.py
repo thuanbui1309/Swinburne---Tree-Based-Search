@@ -67,7 +67,7 @@ class App(ctk.CTk):
         self.geometry("1200x800+400+150")
         self.title("Maze Solver Visualization")
         # self.fg_color("#ffffff")
-        self.configure(fg_color="#ffffff")
+        self.configure(fg_color="#ffffff")                      
 
         # Add widgets to app
         self.map_visualization = TestFrame(self)

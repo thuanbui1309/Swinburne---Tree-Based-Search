@@ -7,6 +7,10 @@ import timeit
 def main():
     filename = sys.argv[1]
     start, goals, map = parse_grid(filename=filename)
+    # print(map)
+
+    # for line in map:
+        # print(line)
     solver = MapSolver(map)
 
     if (len(sys.argv) == 3):
@@ -30,7 +34,7 @@ def main():
             execution_time = timeit.timeit(lambda: solver.ida_star(start, goals), number=1)
         elif (sys.argv[2] == "ALL"):
             nodes, path = solver.astar_multi_goals(start, goals)
-            execution_time = timeit.timeit(lambda: solver.breadth_first_search_full(start, goals), number=1)
+            execution_time = timeit.timeit(lambda: solver.astar_multi_goals(start, goals), number=1)
 
         # Show result
         if (path != None):

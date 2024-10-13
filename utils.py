@@ -26,6 +26,7 @@ def parse_grid(filename) -> tuple[tuple, set, dict]:
 
             # Mark walls
             for line in file:
+                # print(line)
                 line = ast.literal_eval(line)
                 for i in range(line[2]):
                     for j in range(line[3]):

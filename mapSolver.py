@@ -45,87 +45,6 @@ class MapSolver:
 
         return len(parent), None
 
-    def depth_first_search_full(self, start: tuple, goals: set) -> tuple[int, list]:
-        """
-        Function that solves the map with Depth First Search(DFS)
-
-        Args:
-            start: Coordinate of a point
-            goals: A set of all possible goals
-        Return:
-            nodes: Number of nodes traversed
-            path: A list including all moves to a goal. Return None if no goal is reachable
-        """
-        visited = set()
-        frontier = [start]
-        parent = {}
-        paths = []
-
-        parent[start] = (None, None)
-
-        while frontier and goals:
-            cell = frontier.pop()
-            if cell not in visited:
-                visited.add(cell)
-
-                if self.goal_meet(cell, goals):
-                    path = self.parse_path(start, cell, parent)
-                    paths.append(path)
-                    goals.remove(cell)
-                    if not goals:
-                        break
-                
-                neighbors = self.get_neighbors(cell)
-                # Reverse the order of neighbors to ensure the order of execution is up, left, down, right
-                for neighbor in reversed(neighbors):
-                    if neighbor[0] not in visited:
-                        frontier.append(neighbor[0])
-                        parent[neighbor[0]] = (cell, neighbor[1])
-
-        return len(parent), paths if paths else None
-    
-    def breadth_first_search_full(self, start: tuple, goals: set) -> tuple[int, list]:
-        """
-        Function that solves the map with Breath First Search(BFS)
-
-        Args:
-            start: Coordinate of a point
-            goals: A set of all possible goals
-        Return:
-            nodes: Number of nodes traversed
-            path: A list including all moves to a goal. Return None if no goal is reachable
-        """
-        visited = set()             
-        frontier = deque([start]) 
-        parent = {}
-        paths = []
-
-        parent[start] = (None, None)
-
-        while frontier:
-            cell = frontier.popleft()
-            if cell not in visited: 
-                visited.add(cell)
-
-                if self.goal_meet(cell, goals):
-                    path = self.parse_path(start, cell, parent)
-                    paths.append(path)
-                    goals.remove(cell)
-                    if not goals:
-                        break
-                
-                neighbors = self.get_neighbors(cell)
-                for neighbor in neighbors:
-                    if neighbor[0] not in visited and neighbor[0] not in parent.keys():
-                        # If parent already contain a path to this neighbor cell
-                        # Meaning there is a nearer path to reach it 
-                        # It can be from near cell, or from prioritized order
-                        # Avoid duplicate to ensure shortest path found (main goal of BFS)
-                        parent[neighbor[0]] = (cell, neighbor[1])
-                        frontier.append(neighbor[0])
-
-        return len(parent), paths if paths else None
-    
     def breadth_first_search(self, start: tuple, goals: set) -> tuple[int, list]:
         """
         Function that solves the map with Breath First Search(BFS)
@@ -349,77 +268,33 @@ class MapSolver:
                     h_cost = self.heuristic_cost(cell, goals, cost_type)
                     f_cost = g_cost + h_cost
 
-                    print(f"Cell: {cell} with f_cost: {f_cost} in threshold: {threshold}")
+                    # print(f"Cell: {cell} with f_cost: {f_cost} in threshold: {threshold}")
 
                     if self.goal_meet(cell, goals):
                         path = self.parse_path(start, cell, parent)
-                        print(parent)
+                        # print(parent)
                         return len(parent), path
 
 
                     if f_cost > threshold:
                         next_threshold = min(next_threshold, f_cost)
-                        print("Forwarding...")
+                        # print("Forwarding...")
                         continue
                     
                     neighbors = self.get_neighbors(cell)
                     for neighbor in reversed(neighbors):
                         if neighbor[0] not in visited:
-                            print(f"Neighbor: {neighbor[0]} of {cell} in threshold: {threshold}")
+                            # print(f"Neighbor: {neighbor[0]} of {cell} in threshold: {threshold}")
                             frontier.append((neighbor[0], g_cost + self.heuristic_cost(cell, [neighbor[0]], cost_type)))
                             parent[neighbor[0]] = (cell, neighbor[1])
 
-                    print("\n")
+                    # print("\n")
                 
             if next_threshold == float("inf"):
                 return len(visited), None
 
-            print("\nNext Threshold:")
+            # print("\nNext Threshold:")
             threshold = next_threshold
-
-    def breadth_first_search_full(self, start: tuple, goals: set) -> tuple[int, list]:
-        """
-        Function that solves the map with Breath First Search(BFS) to find the shortest path to all goals
-
-        Args:
-            start: Coordinate of a point
-            goals: A set of all possible goals
-        Return:
-            nodes: Number of nodes traversed
-            path: A list including all moves to a goal. Return None if no goal is reachable
-        """
-        visited = set()             
-        frontier = deque([start]) 
-        parent = {}
-        paths = []
-
-        parent[start] = (None, None)
-
-        while frontier:
-            cell = frontier.popleft()
-            if cell not in visited: 
-                visited.add(cell)
-
-                if self.goal_meet(cell, goals):
-                    path = self.parse_path(start, cell, parent)
-                    paths.append(path)
-                    goals.remove(cell)
-                    if not goals:
-                        break
-                
-                neighbors = self.get_neighbors(cell)
-                for neighbor in neighbors:
-                    if neighbor[0] not in visited and neighbor[0] not in parent.keys():
-                        parent[neighbor[0]] = (cell, neighbor[1])
-                        frontier.append(neighbor[0])
-
-        # Filter out paths to ensure only the shortest path to each goal is included
-        shortest_paths = []
-        for path in paths:
-            if not any(len(p) < len(path) for p in paths if p[-1] == path[-1]):
-                shortest_paths.append(path)
-
-        return len(parent), shortest_paths if shortest_paths else None
 
     def cell_in_map(self, cell: tuple) -> bool:
         """
@@ -580,7 +455,8 @@ class MapSolver:
         """
         total_nodes = 0
         total_path = []
-        
+
+        original_goals = goals.copy()
         while True:
             frontier = {}
             visited = {}
@@ -591,20 +467,20 @@ class MapSolver:
             
             found_goal = None
             while frontier:
-                costs = {key: value + self.heuristic_cost(key, goals, cost_type) for key, value in frontier.items()}
-                cell = min(costs, key=costs.get)  # Select the cell with the minimum cost
+                costs = {key: value + self.heuristic_cost(key, original_goals, cost_type) for key, value in frontier.items()}
+                cell = min(costs, key=costs.get)
                 current_cell_cost = frontier[cell]
                 del frontier[cell]
                 visited[cell] = current_cell_cost
 
-                if cell in goals:
+                if cell in original_goals:
                     found_goal = cell
                     break
                 
                 neighbors = self.get_neighbors(cell)
                 for neighbor in neighbors:
                     g_cost = self.heuristic_cost(neighbor[0], [cell], cost_type) + current_cell_cost
-                    h_cost = self.heuristic_cost(neighbor[0], goals, cost_type)
+                    h_cost = self.heuristic_cost(neighbor[0], original_goals, cost_type)
                     f_cost = g_cost + h_cost
 
                     if neighbor[0] in frontier:
@@ -620,23 +496,16 @@ class MapSolver:
                         frontier[neighbor[0]] = f_cost
                         parent[neighbor[0]] = (cell, neighbor[1])
             
-            # If no goal is found in this iteration, return failure
-            if not found_goal:
-                return "can't reach all goals"
-            
-            # Add the path to the found goal
-            path_to_goal = self.parse_path(start, found_goal, parent)
             total_nodes += len(parent)
-            goals.remove(found_goal)
+            if not found_goal:
+                return total_nodes, None
+            
+            path_to_goal = self.parse_path(start, found_goal, parent)
+            original_goals.remove(found_goal)
 
-            if goals:
+            if original_goals:
                 start = found_goal
                 total_path.extend(path_to_goal[:-1])
             else:
-                # print(f"thuan: {path_to_goal}")
-                # print(f"thuan2: {path_to_goal[-1]}")
                 total_path.extend(path_to_goal)
-                break
-        
-        # Return total nodes traversed and the total path to all goals
-        return total_nodes, total_path
+                return total_nodes, total_path
