@@ -1,51 +1,63 @@
 from collections import deque
 
 class MapSolver:
-    def __init__(self, map: list):
+    def __init__(self, map: list, start, goals):
         """
         Initializes the MapSolver with a given map.
 
         Args:
             map: A 2D array representing the map.
+            start: The starting point on the map.
+            goals: A set of all possible goal points on the map.
         """
         self.map = map
+        self.start = start
+        self.goals = goals
 
-    def depth_first_search(self, start: tuple, goals: set) -> tuple[int, list]:
+    def depth_first_search(self, viz=None) -> tuple[int, list]:
         """
         Function that solves the map with Depth First Search(DFS)
 
         Args:
-            start: Coordinate of a point
-            goals: A set of all possible goals
+            viz: an instance of MapSolverVisualization class
         Return:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
         visited = set()
-        frontier = [start]
+        frontier = [self.start]
         parent = {}
 
-        parent[start] = (None, None)
+        parent[self.start] = (None, None)
 
         while frontier:
             cell = frontier.pop()
             if cell not in visited:
                 visited.add(cell)
+                if viz:
+                    viz.update_map(cell)
+                    viz.update_idletasks()
+                    viz.after(50)
 
-                if self.goal_meet(cell, goals):
-                    path = self.parse_path(start, cell, parent)
+                    print("Map after visiting cell:")
+                    for line in self.map:
+                        print(line)
+
+                if self.goal_meet(cell, self.goals):
+                    path = self.parse_path(self.start, cell, parent)
                     return len(parent), path
                 
                 neighbors = self.get_neighbors(cell)
                 # Reverse the order of neighbors to ensure the order of execution is up, left, down, right
                 for neighbor in reversed(neighbors):
                     if neighbor[0] not in visited:
+                        print(f"Checking neighbor: {neighbor[0]} of cell {cell}")
                         frontier.append(neighbor[0])
                         parent[neighbor[0]] = (cell, neighbor[1])
 
         return len(parent), None
 
-    def breadth_first_search(self, start: tuple, goals: set) -> tuple[int, list]:
+    def breadth_first_search(self, viz=None) -> tuple[int, list]:
         """
         Function that solves the map with Breath First Search(BFS)
 
@@ -57,18 +69,22 @@ class MapSolver:
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
         visited = set()             
-        frontier = deque([start]) 
+        frontier = deque([self.start]) 
         parent = {}
 
-        parent[start] = (None, None)
+        parent[self.start] = (None, None)
 
         while frontier:
             cell = frontier.popleft()
             if cell not in visited: 
                 visited.add(cell)
+                if viz:
+                    viz.update_map(cell)
+                    viz.update_idletasks()
+                    viz.after(50)
 
-                if self.goal_meet(cell, goals):
-                    path = self.parse_path(start, cell, parent)
+                if self.goal_meet(cell, self.goals):
+                    path = self.parse_path(self.start, cell, parent)
                     return len(parent), path
                 
                 neighbors = self.get_neighbors(cell)
@@ -82,7 +98,7 @@ class MapSolver:
                         frontier.append(neighbor[0])
         return len(parent), None
     
-    def greedy_best_first_search(self, start: tuple, goals: set, cost_type: str = "manhattan") -> tuple[int, list]:
+    def greedy_best_first_search(self, viz=None, cost_type: str = "manhattan") -> tuple[int, list]:
         """
         Function that solves the map with Greedy Best First Search(GBFS)
 
@@ -97,29 +113,33 @@ class MapSolver:
         frontier = {}
         parent = {}
 
-        frontier[start] = self.heuristic_cost(start, goals, cost_type)
-        parent[start] = (None, None)
+        frontier[self.start] = self.heuristic_cost(self.start, self.goals, cost_type)
+        parent[self.start] = (None, None)
 
         while frontier:
             # Get the key with the lowest cost
             cell = min(frontier, key=frontier.get)
             del frontier[cell]
             visited.add(cell)
+            if viz:
+                viz.update_map(cell)
+                viz.update_idletasks()
+                viz.after(50)
 
-            if self.goal_meet(cell, goals):
-                path = self.parse_path(start, cell, parent)
+            if self.goal_meet(cell, self.goals):
+                path = self.parse_path(self.start, cell, parent)
                 return len(parent), path
 
             neighbors = self.get_neighbors(cell)
             for neighbor in neighbors:
                 if neighbor[0] not in visited and neighbor[0] not in frontier:
-                    cost = self.heuristic_cost(neighbor[0], goals, cost_type)
+                    cost = self.heuristic_cost(neighbor[0], self.goals, cost_type)
                     frontier[neighbor[0]] = cost
                     parent[neighbor[0]] = (cell, neighbor[1])
 
         return len(parent), None
     
-    def astar(self, start: tuple, goals: set, cost_type: str ="manhattan") -> tuple[int, list]:
+    def astar(self, viz=None, cost_type: str ="manhattan") -> tuple[int, list]:
         """
         Function that solves the map with A* Search
 
@@ -135,25 +155,29 @@ class MapSolver:
         visited = {}              
         parent = {}                 
 
-        frontier[start] = 0
-        parent[start] = (None, None, 0)
+        frontier[self.start] = 0
+        parent[self.start] = (None, None, 0)
 
         while frontier:
-            costs = {key: value + self.heuristic_cost(key, goals, cost_type) for key, value in frontier.items()}
+            costs = {key: value + self.heuristic_cost(key, self.goals, cost_type) for key, value in frontier.items()}
             cell = min(costs, key=costs.get)
 
             current_cell_cost = frontier[cell]
             del frontier[cell]
             visited[cell] = current_cell_cost
+            if viz:
+                viz.update_map(cell)
+                viz.update_idletasks()
+                viz.after(50)
 
-            if self.goal_meet(cell, goals):
-                path = self.parse_path(start, cell, parent)
+            if self.goal_meet(cell, self.goals):
+                path = self.parse_path(self.start, cell, parent)
                 return len(parent), path
             
             neighbors = self.get_neighbors(cell)
             for neighbor in neighbors:
                 g_cost = self.heuristic_cost(neighbor[0], [cell], cost_type) + current_cell_cost
-                h_cost = self.heuristic_cost(neighbor[0], goals, cost_type)
+                h_cost = self.heuristic_cost(neighbor[0], self.goals, cost_type)
                 f_cost = g_cost + h_cost
 
                 if neighbor[0] in frontier:
@@ -171,7 +195,7 @@ class MapSolver:
 
         return len(parent), None
     
-    def iterative_deepening_search(self, start: tuple, goals: set) -> tuple[int, list]:
+    def iterative_deepening_search(self, viz=None) -> tuple[int, list]:
         """
         Function that solves the map with Iterative Deepening Search
 
@@ -195,10 +219,12 @@ class MapSolver:
             Returns:
                 goal: The coordinate of a reachable goal cell if found, otherwise returns None.
             """
-            # Mark the current cell as visited to avoid revisiting it
             visited.add(cell)
+            if viz:
+                viz.update_map(cell)
+                viz.update_idletasks()
+                viz.after(50)
 
-            # Check if the current cell is a goal
             if self.goal_meet(cell, goals):
                 return cell
             
@@ -229,19 +255,19 @@ class MapSolver:
             # Reset the parent and visited sets for each depth increment
             parent = {}
             visited = set()
-            parent[start] = (None, None)
+            parent[self.start] = (None, None)
 
-            # Perform the limited search starting from the given start cell
-            goal = limited_search(start, goals, depth)
+            # Perform the limited search self.starting from the given self.start cell
+            goal = limited_search(self.start, self.goals, depth)
             # If a goal is found, parse the path to the goal and return the number of nodes traversed and the path
             if goal:
-                path = self.parse_path(start, goal, parent)
+                path = self.parse_path(self.start, goal, parent)
                 return len(parent), path
             
             # Increment the depth for the next iteration
             depth += 1
 
-    def ida_star(self, start: tuple, goals: set, cost_type: str ="manhattan") -> tuple[int, list]:
+    def ida_star(self, viz=None, cost_type: str ="manhattan") -> tuple[int, list]:
         """
         Function that solves the map with Iterative Deepening A*
 
@@ -252,11 +278,11 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        threshold = self.heuristic_cost(start, goals, cost_type)
+        threshold = self.heuristic_cost(self.start, self.goals, cost_type)
 
         while True:
-            frontier = [(start, 0)]
-            parent = {start: (None, None)}
+            frontier = [(self.start, 0)]
+            parent = {self.start: (None, None)}
             visited = set()
             next_threshold = float("inf")
 
@@ -264,14 +290,18 @@ class MapSolver:
                 cell, g_cost = frontier.pop()
                 if cell not in visited:
                     visited.add(cell)
+                    if viz:
+                        viz.update_map(cell)
+                        viz.update_idletasks()
+                        viz.after(50)
 
-                    h_cost = self.heuristic_cost(cell, goals, cost_type)
+                    h_cost = self.heuristic_cost(cell, self.goals, cost_type)
                     f_cost = g_cost + h_cost
 
                     # print(f"Cell: {cell} with f_cost: {f_cost} in threshold: {threshold}")
 
-                    if self.goal_meet(cell, goals):
-                        path = self.parse_path(start, cell, parent)
+                    if self.goal_meet(cell, self.goals):
+                        path = self.parse_path(self.start, cell, parent)
                         # print(parent)
                         return len(parent), path
 
@@ -308,7 +338,7 @@ class MapSolver:
         """
         return cell[0] >= 0 and cell[0] < len(self.map) and cell[1] >= 0 and cell[1] < len(self.map[0])
 
-    def cell_is_wall(self, cell: tuple) -> bool:
+    def cell_not_wall(self, cell: tuple) -> bool:
         """
         Function that checks if a cell is a wall
 
@@ -318,7 +348,7 @@ class MapSolver:
             true: If the cell is a wall
             false: If the cell is not a wall
         """
-        return self.map[cell[0]][cell[1]] == 1
+        return self.map[cell[0]][cell[1]] != 1
 
     def get_neighbors(self, cell: tuple) -> list:
         """
@@ -345,7 +375,7 @@ class MapSolver:
             neighbor_y = cell_y + coor[1]
             neighbor = (neighbor_x, neighbor_y)
 
-            if self.cell_in_map(neighbor) and not self.cell_is_wall(neighbor):
+            if self.cell_in_map(neighbor) and self.cell_not_wall(neighbor):
                 neighbors.append(((neighbor_y, neighbor_x), direction))
 
         return neighbors
@@ -376,32 +406,6 @@ class MapSolver:
         distances = [abs(point[0] - goal[0]) + abs(point[1] - goal[1]) for goal in goals]
         return min(distances)
     
-    def euclidean_distance(self, point: tuple, goals: set) -> float:
-        """
-        Function that calculates the Euclidean distance from a point to a set of goals
-
-        Args:
-            point: Coordinate of a starting point
-            goals: A set of all possible goals
-        Return:
-            cost: The minimum Euclidean distance to any goal
-        """
-        distances = [((point[0] - goal[0])**2 + (point[1] - goal[1])**2)**0.5 for goal in goals]
-        return min(distances)
-    
-    def chebyshev_distance(self, point: tuple, goals: set) -> int:
-        """
-        Function that calculates the Chebyshev distance from a point to a set of goals
-
-        Args:
-            point: Coordinate of a starting point
-            goals: A set of all possible goals
-        Return:
-            cost: The minimum Chebyshev distance to any goal
-        """
-        distances = [max(abs(point[0] - goal[0]), abs(point[1] - goal[1])) for goal in goals]
-        return min(distances)
-    
     def heuristic_cost(self, point: tuple, goals: set, type: str) -> int:
         """
         Function that calculates the heuristic cost from a point to a set of goals
@@ -415,10 +419,6 @@ class MapSolver:
         """
         if (type == "manhattan"):
             return self.manhattan_distance(point, goals)
-        elif (type == "euclidean"):
-            return self.euclidean_distance(point, goals)
-        elif (type == "chebyshev"):
-            return self.chebyshev_distance(point, goals)
         
     def parse_path(self, start: tuple, vertex: tuple, parent: dict) -> list:
         """
@@ -440,7 +440,7 @@ class MapSolver:
 
         return path
     
-    def astar_multi_goals(self, start: tuple, goals: set, cost_type: str = "manhattan") -> tuple[int, list]:
+    def astar_multi_goals(self, viz, cost_type: str = "manhattan") -> list:
         """
         Function that solves the map with A* Search and aims to reach all goals with the shortest path.
 
@@ -450,20 +450,19 @@ class MapSolver:
             cost_type: The type of heuristic cost function to use.
 
         Returns:
-            nodes: Total number of nodes traversed.
-            path: A list of all moves to all goals in sequence. Returns "can't reach all goals" if not all goals are reachable.
+            total_paths: A list of all moves to all goals in sequence. Returns "can't reach all goals" if not all goals are reachable.
         """
         total_nodes = 0
         total_path = []
 
-        original_goals = goals.copy()
+        original_goals = self.goals.copy()
         while True:
             frontier = {}
             visited = {}
             parent = {}
             
-            frontier[start] = 0
-            parent[start] = (None, None, 0)
+            frontier[self.start] = 0
+            parent[self.start] = (None, None, 0)
             
             found_goal = None
             while frontier:
@@ -472,6 +471,10 @@ class MapSolver:
                 current_cell_cost = frontier[cell]
                 del frontier[cell]
                 visited[cell] = current_cell_cost
+
+                viz.update_map(cell)
+                viz.update_idletasks()
+                viz.after(50)
 
                 if cell in original_goals:
                     found_goal = cell
@@ -498,14 +501,14 @@ class MapSolver:
             
             total_nodes += len(parent)
             if not found_goal:
-                return total_nodes, None
+                return None
             
-            path_to_goal = self.parse_path(start, found_goal, parent)
+            path_to_goal = self.parse_path(self.start, found_goal, parent)
             original_goals.remove(found_goal)
 
             if original_goals:
-                start = found_goal
+                self.start = found_goal
                 total_path.extend(path_to_goal[:-1])
             else:
                 total_path.extend(path_to_goal)
-                return total_nodes, total_path
+                return total_path
