@@ -9,8 +9,8 @@ def main():
     start, goals, map = parse_grid(filename=filename)
     # print(map)
 
-    for line in map:
-        print(line)
+    # for line in map:
+    #     print(line)
     solver = MapSolver(map, start, goals)
 
     if (len(sys.argv) == 3):

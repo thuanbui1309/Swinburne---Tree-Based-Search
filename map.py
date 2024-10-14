@@ -2,45 +2,46 @@ import customtkinter as ctk
 import tkinter as tk
 import copy
 
+START_COLOR = "#D00000"
+GOAL_COLOR = "#1DB954"
+OBSTACLE_COLOR = "#000000"
+EMPTY_COLOR = "#ffffff"
+PATH_COLOR = "#FFBA08"
+FINAL_PATH_COLOR = "#1DB954"
+FRAME_BG_COLOR = "#000000"
+WINDOW_BG_COLOR = "#000000"
+MAZE_BG_COLOR = "#3F88C5"
+BUTTON_BG_COLOR = "#1DB954"
+BUTTON_TEXT_COLOR = "#000000"
+
+WINDOW_HEIGHT = 832
+WINDOW_WIDTH = 1072
+WINDOW_X = 464
+WINDOW_Y = 134
+FRAME_SIZE = 732
+FRAME_X = 50
+FRAME_Y = 50
+BUTTON_START_X = 822
+BUTTON_Y = 252
+
 class MyFrame(ctk.CTkFrame):
     def __init__(self, master, solver, frame_size):
         super().__init__(master)
-        self.configure(fg_color="#000000",
+        self.configure(fg_color=FRAME_BG_COLOR,
                        width=frame_size,
                        height=frame_size)
 
         self.solver = solver
-        print(type(solver.map))
         self.map = copy.deepcopy(solver.map)
-
-        # for line in self.map:
-            # print(line)
         self.start = solver.start
-        self.goals = solver.goals
+        self.goals = copy.deepcopy(solver.goals)
         self.frame_size = frame_size
 
         self.transfer_map()
-        
         self.original_map = copy.deepcopy(self.map)
-        print("Map")
-        for line in self.map:
-            print(line)
-
-        print("ORIGINAL")
-        for line in self.original_map:
-            print(line)
-
         self.calculate_cell_size()
         self.draw_background()
         self.draw_map()
-
-        print()
-        for line in self.map:
-            print(line)
-
-        print()
-        for line in solver.map:
-            print(line)
 
     def transfer_map(self):
         for i in range(len(self.map)):
@@ -48,14 +49,14 @@ class MyFrame(ctk.CTkFrame):
 
                 if self.map[i][j] == 0:
                     if j == self.start[0] and i == self.start[1]:
-                        self.map[i][j] = "red"
+                        self.map[i][j] = START_COLOR
                     elif tuple((j, i)) in self.goals:
-                        self.map[i][j] = "green"
+                        self.map[i][j] = GOAL_COLOR
                     else:
-                        self.map[i][j] = "white"
+                        self.map[i][j] = EMPTY_COLOR
 
                 elif self.map[i][j] == 1:
-                    self.map[i][j] = "black"
+                    self.map[i][j] = OBSTACLE_COLOR
 
     def calculate_cell_size(self):
         self.cell_size = None
@@ -84,7 +85,7 @@ class MyFrame(ctk.CTkFrame):
         self.background = ctk.CTkFrame(self,
                                   width=self.map_width,
                                   height=self.map_height,
-                                  fg_color="#3F88C5")
+                                  fg_color=MAZE_BG_COLOR)
         self.background.place(x=self.start_x, y=self.start_y)
 
     def draw_map(self):
@@ -96,15 +97,8 @@ class MyFrame(ctk.CTkFrame):
                 node = ctk.CTkFrame(self.background,
                                     width=self.cell_size,
                                     height=self.cell_size,
-                                    corner_radius=0)
-                if cell == "black":
-                    node.configure(fg_color="#000000")
-                elif cell == "red":
-                    node.configure(fg_color="#D00000")
-                elif cell == "green":
-                    node.configure(fg_color="#1DB954")
-                elif cell == "white":
-                    node.configure(fg_color="#ffffff")
+                                    corner_radius=0,
+                                    fg_color=cell)
 
                 node.place(x=x, y=y)
 
@@ -113,38 +107,38 @@ class MyFrame(ctk.CTkFrame):
             widget.destroy()
         self.draw_map()
 
-    def map_refresh(self):
-        for line in self.original_map:
-            print(line)
+    def refresh_map(self):
+        # for widget in self.background.winfo_children():
+            # widget.destroy()
         self.map = copy.deepcopy(self.original_map)
         self.draw_map()
 
 class MapSolverVisualization(ctk.CTk):
     def __init__(self, mapSolver):
         super().__init__()
-        self.geometry("1072x832+464+134")
+        self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{WINDOW_X}+{WINDOW_Y}")
         self.title("Map Solver Visualization")
-        self.configure(fg_color="#000000")  
+        self.configure(fg_color=WINDOW_BG_COLOR)  
         self.solver = mapSolver
         self.create_widget()
 
     def create_widget(self):                    
-        self.map_visualization = MyFrame(self, self.solver, 732)
-        self.map_visualization.place(x=50, y=50)
+        self.map_visualization = MyFrame(self, self.solver, FRAME_SIZE)
+        self.map_visualization.place(x=FRAME_X, y=FRAME_Y)
 
         self.dfs_button = ctk.CTkButton(self,
                                         hover_color="#ffffff", 
                                         command=lambda: self.button_click("dfs"),
                                         text="Depth-First Search",
                                         corner_radius=50,
-                                        fg_color="#1DB954",
-                                        text_color="#000000")
+                                        fg_color=BUTTON_BG_COLOR,
+                                        text_color=BUTTON_TEXT_COLOR)
         self.dfs_button.place(x=822, y=252)
 
         self.bfs_button = ctk.CTkButton(self,
                                         hover_color="#ffffff",
-                                        fg_color="#1DB954",
-                                        text_color="#000000", 
+                                        fg_color=BUTTON_BG_COLOR,
+                                        text_color=BUTTON_TEXT_COLOR, 
                                         command=lambda: self.button_click("bfs"),
                                         text="Breadth-First Search",
                                         corner_radius=50)
@@ -152,8 +146,8 @@ class MapSolverVisualization(ctk.CTk):
 
         self.gbfs_button = ctk.CTkButton(self,
                                         hover_color="#ffffff",
-                                        fg_color="#1DB954",
-                                        text_color="#000000", 
+                                        fg_color=BUTTON_BG_COLOR,
+                                        text_color=BUTTON_TEXT_COLOR, 
                                         command=lambda: self.button_click("gbfs"),
                                         text="Greedy-Best First Search",
                                         corner_radius=50)
@@ -161,8 +155,8 @@ class MapSolverVisualization(ctk.CTk):
 
         self.astar = ctk.CTkButton(self,
                                    hover_color="#ffffff",
-                                   fg_color="#1DB954",
-                                   text_color="#000000", 
+                                   fg_color=BUTTON_BG_COLOR,
+                                   text_color=BUTTON_TEXT_COLOR, 
                                    command=lambda: self.button_click("astar"),
                                    text="A* Search",
                                    corner_radius=50)
@@ -170,8 +164,8 @@ class MapSolverVisualization(ctk.CTk):
 
         self.cus1 = ctk.CTkButton(self,
                                   hover_color="#ffffff",
-                                  fg_color="#1DB954",
-                                  text_color="#000000", 
+                                  fg_color=BUTTON_BG_COLOR,
+                                  text_color=BUTTON_TEXT_COLOR, 
                                   command=lambda: self.button_click("cus1"),
                                   text="Iterative Deepening Search",
                                   corner_radius=50)
@@ -179,8 +173,8 @@ class MapSolverVisualization(ctk.CTk):
 
         self.cus2 = ctk.CTkButton(self,
                                   hover_color="#ffffff",
-                                  fg_color="#1DB954",
-                                  text_color="#000000", 
+                                  fg_color=BUTTON_BG_COLOR,
+                                  text_color=BUTTON_TEXT_COLOR, 
                                   command=lambda: self.button_click("cus2"),
                                   text="Iterative Deepening A* Search",
                                   corner_radius=50)
@@ -188,8 +182,8 @@ class MapSolverVisualization(ctk.CTk):
 
         self.cus3 = ctk.CTkButton(self,
                                   hover_color="#ffffff",
-                                  fg_color="#1DB954",
-                                  text_color="#000000", 
+                                  fg_color=BUTTON_BG_COLOR,
+                                  text_color=BUTTON_TEXT_COLOR, 
                                   command=lambda: self.button_click("all"),
                                   text="All Goal Search",
                                   corner_radius=50)
@@ -197,25 +191,47 @@ class MapSolverVisualization(ctk.CTk):
 
     def button_click(self, search_type: str):
         print("Button clicked")
-        self.map_visualization.map_refresh()
+        self.map_visualization.clear_map()
+        self.map_visualization.refresh_map()
+
+        print(self.map_visualization.goals)
 
         if search_type == "dfs":
+            print("DFS")
             self.solver.depth_first_search(viz=self)
         elif search_type == "bfs":
+            print("BFS")
             self.solver.breadth_first_search(viz=self)
         elif search_type == "gbfs":
+            print("GBFS")
             self.solver.greedy_best_first_search(viz=self)
         elif search_type == "astar":
+            print("A*")
             self.solver.astar(viz=self)
         elif search_type == "cus1":
+            print("CUS1")
             self.solver.iterative_deepening_search(viz=self)
         elif search_type == "cus2":
+            print("CUS2")
             self.solver.ida_star(viz=self)
         elif search_type == "all":
+            print("All")
             self.solver.astar_multi_goals(viz=self)
 
-    def update_map(self, cell):
-        # Update only the specific cell that needs to change
-        self.map_visualization.clear_map()
-        self.map_visualization.map[cell[1]][cell[0]] = "green"
-        self.map_visualization.draw_map()
+    def update_map(self, cell, color=PATH_COLOR):
+        if cell != self.solver.start and cell not in self.solver.goals:
+            self.map_visualization.clear_map()
+            self.map_visualization.map[cell[1]][cell[0]] = color
+            self.map_visualization.draw_map()
+
+    def show_path(self, path):
+        path_coordinates = [cell for cell, _ in path[:-1]]
+
+        for cell in path_coordinates:
+            # print(cell)
+            self.update_map(cell, color=FINAL_PATH_COLOR)
+            self.update_idletasks()
+            self.after(300)
+
+    def reset_map(self):
+        self.map_visualization.refresh_map()
