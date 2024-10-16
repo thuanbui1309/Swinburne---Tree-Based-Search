@@ -24,7 +24,6 @@ class MapSolver:
             nodes: Number of nodes traversed
             path: A list including all moves to a goal. Return None if no goal is reachable
         """
-        print("DFS Searching")
         visited = set()
         frontier = [self.start]
         parent = {}
@@ -33,6 +32,7 @@ class MapSolver:
 
         while frontier:
             cell = frontier.pop()
+            # print(f"Checking Cell: {cell}")
             if cell not in visited:
                 visited.add(cell)
                 if viz:
@@ -44,16 +44,21 @@ class MapSolver:
                     path = self.parse_path(self.start, cell, parent)
                     if viz:
                         viz.show_path(path)
-                    print("DFS Done")
                     return len(parent), path
                 
                 neighbors = self.get_neighbors(cell)
                 # Reverse the order of neighbors to ensure the order of execution is up, left, down, right
                 for neighbor in reversed(neighbors):
+                    # print(f"Checking Neighbor: {neighbor[0]} of cell: {cell}")
                     if neighbor[0] not in visited:
+                        # print(f"Neighbor: {neighbor[0]} is not visited and valid to add to frontier")
                         frontier.append(neighbor[0])
                         parent[neighbor[0]] = (cell, neighbor[1])
 
+                # for i in range(len(frontier)):
+                    # print(f"Frontier {i+1}: {frontier[i]}")
+                
+                # print("\n")
         return len(parent), None
 
     def breadth_first_search(self, viz=None) -> tuple[int, list]:
@@ -92,8 +97,8 @@ class MapSolver:
                 for neighbor in neighbors:
                     if neighbor[0] not in visited and neighbor[0] not in parent.keys():
                         # If parent already contain a path to this neighbor cell
-                        # Meaning there is a nearer path to reach it 
-                        # It can be from near cell, or from prioritized order
+                        # Meaning there is already path to reach it 
+                        # It can be from nearer cell, or from prioritized order
                         # Avoid duplicate to ensure shortest path found (main goal of BFS)
                         parent[neighbor[0]] = (cell, neighbor[1])
                         frontier.append(neighbor[0])
@@ -121,24 +126,25 @@ class MapSolver:
             # Get the key with the lowest cost
             cell = min(frontier, key=frontier.get)
             del frontier[cell]
-            visited.add(cell)
-            if viz:
-                viz.update_map(cell)
-                viz.update_idletasks()
-                viz.after(50)
-
-            if self.goal_meet(cell, self.goals):
-                path = self.parse_path(self.start, cell, parent)
+            if cell not in visited:
+                visited.add(cell)
                 if viz:
-                    viz.show_path(path)
-                return len(parent), path
+                    viz.update_map(cell)
+                    viz.update_idletasks()
+                    viz.after(50)
 
-            neighbors = self.get_neighbors(cell)
-            for neighbor in neighbors:
-                if neighbor[0] not in visited and neighbor[0] not in frontier:
-                    cost = self.heuristic_cost(neighbor[0], self.goals)
-                    frontier[neighbor[0]] = cost
-                    parent[neighbor[0]] = (cell, neighbor[1])
+                if self.goal_meet(cell, self.goals):
+                    path = self.parse_path(self.start, cell, parent)
+                    if viz:
+                        viz.show_path(path)
+                    return len(parent), path
+
+                neighbors = self.get_neighbors(cell)
+                for neighbor in neighbors:
+                    if neighbor[0] not in visited:
+                        cost = self.heuristic_cost(neighbor[0], self.goals)
+                        frontier[neighbor[0]] = cost
+                        parent[neighbor[0]] = (cell, neighbor[1])
 
         return len(parent), None
     
@@ -223,9 +229,13 @@ class MapSolver:
 
             Returns:
                 goal: The coordinate of a reachable goal cell if found, otherwise returns None.
+                expandable: A boolean indicating if any unvisited neighbors exist at this depth.
             """
+            nonlocal expandable
+
             if cell not in visited:
                 visited.add(cell)
+
                 if viz:
                     viz.update_map(cell)
                     viz.update_idletasks()
@@ -233,11 +243,14 @@ class MapSolver:
 
                 if self.goal_meet(cell, goals):
                     return cell
-                
-                if depth == 0:
-                    return None
-                
+
                 neighbors = self.get_neighbors(cell)
+
+                if depth == 0:
+                    # Check if there are any unvisited neighbors (expandable in next level)
+                    expandable = expandable or any(neighbor[0] not in visited for neighbor in neighbors)
+                    return None
+
                 for neighbor in neighbors:
                     if neighbor[0] not in visited:
                         parent[neighbor[0]] = (cell, neighbor[1])
@@ -245,26 +258,36 @@ class MapSolver:
 
                         if goal:
                             return goal
-                    
+
             return None
 
+
         depth = 0
+
         while True:
             parent = {}
             visited = set()
             parent[self.start] = (None, None)
 
+            expandable = False  # Reset expandable status for each depth
             goal = limited_search(self.start, self.goals, depth)
+
             if goal:
                 path = self.parse_path(self.start, goal, parent)
                 if viz:
                     viz.show_path(path)
                 return len(parent), path
-            
-            depth += 1
-            if viz:
-                viz.reset_map()
-                viz.update_idletasks()
+            else:
+                if not expandable:
+                    # No unvisited neighbors left, stop the search
+                    return len(visited), None
+
+                # Increment depth and continue searching
+                depth += 1
+
+                if viz:
+                    viz.reset_map()
+                    viz.update_idletasks()
 
     def ida_star(self, viz=None) -> tuple[int, list]:
         """
@@ -329,7 +352,7 @@ class MapSolver:
                 viz.update_idletasks()
                 viz.after(50)
 
-    def astar_multi_goals(self, viz) -> list:
+    def astar_multi_goals(self, viz=None) -> list:
         """
         Function that solves the map with A* Search and aims to reach all goals with the shortest path.
 
