@@ -39,14 +39,14 @@ class MyFrame(ctk.CTkFrame):
 
         self.transfer_map()
         self.original_map = copy.deepcopy(self.map)
+
         self.calculate_cell_size()
         self.draw_background()
         self.draw_map()
 
     def transfer_map(self):
         for i in range(len(self.map)):
-            for j in range(len(self.map[i])):
-
+            for j in range(len(self.map[0])):   
                 if self.map[i][j] == 0:
                     if j == self.start[0] and i == self.start[1]:
                         self.map[i][j] = START_COLOR
@@ -74,7 +74,7 @@ class MyFrame(ctk.CTkFrame):
             self.map_height = self.cell_size * (map_row + (map_row + 1) / 10)
             self.start_x = 0
             self.start_y = (self.frame_size - self.map_height) / 2
-        elif (map_column >= map_row):
+        elif (map_column <= map_row):
             self.cell_size = self.frame_size / ((map_row + ((map_row+1) / 10)))
             self.map_height = self.frame_size
             self.map_width = self.cell_size * (map_column + (map_column + 1) / 10)
@@ -108,8 +108,6 @@ class MyFrame(ctk.CTkFrame):
         self.draw_map()
 
     def refresh_map(self):
-        # for widget in self.background.winfo_children():
-            # widget.destroy()
         self.map = copy.deepcopy(self.original_map)
         self.draw_map()
 

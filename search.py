@@ -9,8 +9,8 @@ def main():
     start, goals, map = parse_grid(filename=filename)
     # print(map)
 
-    # for line in map:
-    #     print(line)
+    for line in map:
+        print(line)
 
     # for i in range(len(map)):
     #     for j in range(len(map[i])):
@@ -23,7 +23,6 @@ def main():
         if sys.argv[2] == "ALL":
             path = solver.astar_multi_goals()
             print([direction for _, direction in path[:-1]])  
-            # print(path)
         else:
             if (sys.argv[2] == "DFS"):
                 nodes, path = solver.depth_first_search()

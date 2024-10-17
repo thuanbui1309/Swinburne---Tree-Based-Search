@@ -33,7 +33,7 @@ class TestMapSolver(unittest.TestCase):
         self.assertEqual(self.medium_goals, set([(7,7), (10,2)]))
         self.assertEqual(self.large_goals, set([(11,0), (15,0), (18, 5), (19, 19)]))
 
-    def test_identifyWalls_returnsCorrectGoals(self):
+    def test_identifyWalls_returnsCorrectWalls(self):
         # Correct wall indexes
         small_walls_index = [(1, 0), (1, 1), (1, 3), (2, 0), (2, 1), (2, 3)]
         medium_walls_index = [(0, 1), (1, 1), (1, 4), (1, 7), (1, 8), (1, 9), (2, 1), (2, 4), (2, 5), (2, 9), (3, 1), (3, 4), (3, 5), (3, 9), (4, 4), (4, 7), (4, 8), (4, 9), (5, 1), (5, 2), (5, 3), (5, 4), (6, 6), (6, 10), (7, 1), (7, 6), (7, 10)]
