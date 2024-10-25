@@ -44,7 +44,7 @@ def main():
                 print(f"No goal is reachable; {nodes}")
 
     elif(len(sys.argv) == 2):
-        map_viz = MapSolverVisualization(solver)
+        map_viz = Map(solver)
         map_viz.mainloop()
 
 if __name__ == "__main__":

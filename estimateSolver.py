@@ -110,7 +110,6 @@ plt.show()
 
 # Process and visualize extra_large.txt separately
 if "extra_large.txt" in txt_files:
-    print("Processing extra_large.txt separately...")
     start, goals, map = parse_grid(filename="extra_large.txt")
     solver = MapSolver(map, start, goals)
     

@@ -24,7 +24,7 @@ FRAME_Y = 50
 BUTTON_START_X = 822
 BUTTON_Y = 252
 
-class MyFrame(ctk.CTkFrame):
+class GridFrame(ctk.CTkFrame):
     def __init__(self, master, solver, frame_size):
         super().__init__(master)
         self.configure(fg_color=FRAME_BG_COLOR,
@@ -111,7 +111,7 @@ class MyFrame(ctk.CTkFrame):
         self.map = copy.deepcopy(self.original_map)
         self.draw_map()
 
-class MapSolverVisualization(ctk.CTk):
+class Map(ctk.CTk):
     def __init__(self, mapSolver):
         super().__init__()
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{WINDOW_X}+{WINDOW_Y}")
@@ -121,7 +121,7 @@ class MapSolverVisualization(ctk.CTk):
         self.create_widget()
 
     def create_widget(self):                    
-        self.map_visualization = MyFrame(self, self.solver, FRAME_SIZE)
+        self.map_visualization = GridFrame(self, self.solver, FRAME_SIZE)
         self.map_visualization.place(x=FRAME_X, y=FRAME_Y)
 
         self.dfs_button = ctk.CTkButton(self,
@@ -188,32 +188,22 @@ class MapSolverVisualization(ctk.CTk):
         self.cus3.place(x=822, y=552)
 
     def button_click(self, search_type: str):
-        print("Button clicked")
         self.map_visualization.clear_map()
         self.map_visualization.refresh_map()
 
-        print(self.map_visualization.goals)
-
         if search_type == "dfs":
-            print("DFS")
             self.solver.depth_first_search(viz=self)
         elif search_type == "bfs":
-            print("BFS")
             self.solver.breadth_first_search(viz=self)
         elif search_type == "gbfs":
-            print("GBFS")
             self.solver.greedy_best_first_search(viz=self)
         elif search_type == "astar":
-            print("A*")
             self.solver.astar(viz=self)
         elif search_type == "cus1":
-            print("CUS1")
             self.solver.iterative_deepening_search(viz=self)
         elif search_type == "cus2":
-            print("CUS2")
             self.solver.ida_star(viz=self)
         elif search_type == "all":
-            print("All")
             self.solver.astar_multi_goals(viz=self)
 
     def update_map(self, cell, color=PATH_COLOR):
@@ -226,7 +216,6 @@ class MapSolverVisualization(ctk.CTk):
         path_coordinates = [cell for cell, _ in path[:-1]]
 
         for cell in path_coordinates:
-            # print(cell)
             self.update_map(cell, color=FINAL_PATH_COLOR)
             self.update_idletasks()
             self.after(300)

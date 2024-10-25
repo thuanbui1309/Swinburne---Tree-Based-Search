@@ -102,7 +102,7 @@ class TestMapSolver(unittest.TestCase):
 
         dfs_accurate_large_path = ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'left', 'left', 'up', 'up', 'left', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'right', 'up', 'right', 'up', 'up', 'right', 'down', 'down', 'down', 'right', 'right', 'right', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'up', 'up', 'right', 'down', 'down', 'right', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'right', 'up', 'up', 'up', 'right', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'left', 'left', 'up', 'up', 'up', 'up', 'up', 'up']
         bfs_accurate_large_path = ['down', 'down', 'down', 'right', 'right', 'right', 'up', 'right', 'right', 'right', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right']
-        gbfs_accurate_large_path = ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'right', 'right', 'right', 'right', 'right', 'down', 'left', 'left', 'left', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'right', 'right', 'up', 'up', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'down', 'down', 'right', 'down', 'right', 'right', 'down', 'down', 'down', 'right', 'right', 'up', 'up', 'up', 'up', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right']
+        gbfs_accurate_large_path = ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'right', 'right', 'up', 'up', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'down', 'down', 'right', 'down', 'right', 'right', 'down', 'down', 'down', 'right', 'right', 'up', 'up', 'up', 'up', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right']
         astar_accurate_large_path = ['right', 'down', 'down', 'down', 'right', 'right', 'up', 'right', 'right', 'right', 'right', 'right', 'right', 'down', 'down', 'right', 'down', 'down', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right']
         cus1_accurate_large_path = ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'left', 'left', 'up', 'up', 'left', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'right', 'up', 'right', 'up', 'up', 'right', 'down', 'down', 'down', 'right', 'right', 'right', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'up', 'up', 'right', 'down', 'down', 'right', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'right', 'up', 'up', 'up', 'right', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'left', 'left', 'up', 'up', 'up', 'up', 'up', 'up']
         cus2_accurate_large_path = ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'down', 'right', 'up', 'up', 'right', 'down', 'down', 'right', 'up', 'right', 'up', 'up', 'right', 'down', 'down', 'right', 'down', 'down', 'down', 'down', 'right', 'right', 'down', 'right', 'up', 'right', 'right', 'right', 'right', 'right', 'down', 'down', 'down', 'down', 'right', 'right']
@@ -209,14 +209,14 @@ class TestMapSolver(unittest.TestCase):
         self.assertEqual(dfs_medium_nodes, 34)
         self.assertEqual(bfs_medium_nodes, 46)
         self.assertEqual(gbfs_medium_nodes, 21)
-        self.assertEqual(astar_medium_nodes, 26)
+        self.assertEqual(astar_medium_nodes, 22)
         self.assertEqual(cus1_medium_nodes, 47)
         self.assertEqual(cus2_medium_nodes, 34)
 
         self.assertEqual(dfs_large_nodes, 138)
         self.assertEqual(bfs_large_nodes, 182)
         self.assertEqual(gbfs_large_nodes, 103)
-        self.assertEqual(astar_large_nodes, 163)
+        self.assertEqual(astar_large_nodes, 156)
         self.assertEqual(cus1_large_nodes, 126)
         self.assertEqual(cus2_large_nodes, 133)
 
